@@ -1,3 +1,5 @@
+# Сервис благотворительного фонда поддержки котиков
+
 Клонировать репозиторий и перейти в него в командной строке:
 
 ```
@@ -40,4 +42,40 @@ pip install -r requirements.txt
 
 ```
 uvicorn app.main:app
+```
+
+# Примеры
+```
+POST charity_project
+{
+  "name": "string",
+  "description": "string",
+  "full_amount": 0
+}
+```
+
+```
+POST donation
+{
+  "full_amount": 0,
+  "comment": "string"
+}
+```
+
+
+# Cодержимое env-файла
+APP_TITLE - Имя приложения (Сервис благотворительного фонда поддержки котиков)
+
+APP_DESCRIPTION - Описание приложения (Приложение для благотворительного фонда поддержки котиков, в которой можно делать пожертвования)
+
+DATABASE_URL - База данных (sqlite+aiosqlite:///./fastapi.db)
+
+SECRET - Пароль (Superparol123)
+FIRST_SUPERUSER_EMAIL - Имя суперпользователя (superuser@mail.ru)
+FIRST_SUPERUSER_PASSWORD - Пароль суперпользователя (parol12345)
+
+# Миграция
+```
+alembic revision --autogenerate -m "Описание миграции"
+alembic upgrade head
 ```

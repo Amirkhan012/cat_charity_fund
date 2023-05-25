@@ -6,7 +6,10 @@ from sqlalchemy import select  # type: ignore
 from sqlalchemy.ext.asyncio import AsyncSession  # type: ignore
 
 from app.crud.base import CRUDBase
-from app.models import CharityProject, Donation
+from app.models import CharityProject
+from app.services.donation import (
+    get_donation_fully_invested_false_objects
+)
 
 
 class CRUDCharityProject(CRUDBase):
@@ -23,11 +26,7 @@ class CRUDCharityProject(CRUDBase):
         await session.commit()
         await session.refresh(db_obj)
 
-        donations = await session.execute(
-            select(Donation).where(
-                Donation.fully_invested is not True
-            )
-        )
+        donations = await get_donation_fully_invested_false_objects(session)
         donations = donations.scalars().all()
 
         if donations:

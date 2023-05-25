@@ -9,6 +9,9 @@ class CharityProjectBase(BaseModel):
     description: str = Field(...)
     full_amount: PositiveInt
 
+    class Config:
+        min_anystr_length = 0
+
 
 class CharityProjectCreate(CharityProjectBase):
     pass
@@ -36,7 +39,7 @@ class CharityProjectUpdate(BaseModel):
 
     @validator('name')
     def validate_name(cls, name, values):
-        if name is None and len(name) > 100 or name.strip() == '':
+        if name is None or len(name) > 100 or name.strip() == '':
             raise ValueError("Название проекта не может быть длиннее 100 символов")
         return name
 

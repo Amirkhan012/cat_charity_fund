@@ -3,8 +3,9 @@ from datetime import datetime  # type: ignore
 from sqlalchemy import select  # type: ignore
 from sqlalchemy.ext.asyncio import AsyncSession  # type: ignore
 
-from app.models import User, CharityProject, Donation
+from app.models import User, Donation
 from app.crud.base import CRUDBase
+from app.services.charity_project import get_project_fully_invested_false_objects
 
 
 class CRUDDonation(CRUDBase):
@@ -23,11 +24,7 @@ class CRUDDonation(CRUDBase):
         await session.commit()
         await session.refresh(db_obj)
 
-        projects = await session.execute(
-            select(CharityProject).where(
-                CharityProject.fully_invested is not True
-            ).order_by(CharityProject.create_date)
-        )
+        projects = await get_project_fully_invested_false_objects(session)
         projects = projects.scalars().all()
 
         if projects:
