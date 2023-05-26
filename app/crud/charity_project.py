@@ -1,4 +1,3 @@
-from datetime import datetime
 from typing import Optional
 
 from fastapi.encoders import jsonable_encoder  # type: ignore
@@ -7,9 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession  # type: ignore
 
 from app.crud.base import CRUDBase
 from app.models import CharityProject
-from app.services.donation import (
-    get_donation_fully_invested_false_objects
-)
+from app.services.charity_project import project_donation
 
 
 class CRUDCharityProject(CRUDBase):
@@ -26,35 +23,8 @@ class CRUDCharityProject(CRUDBase):
         await session.commit()
         await session.refresh(db_obj)
 
-        donations = await get_donation_fully_invested_false_objects(session)
-        donations = donations.scalars().all()
-
-        if donations:
-            right_amount = db_obj.full_amount
-            for donation in donations:
-                if right_amount <= 0:
-                    break
-
-                to_add = min(
-                    donation.full_amount - donation.invested_amount, right_amount)
-
-                if to_add >= right_amount:
-                    to_add = right_amount
-
-                    donation.invested_amount += to_add
-                    db_obj.invested_amount += to_add
-                    db_obj.fully_invested = True
-                    db_obj.close_date = datetime.utcnow()
-                    right_amount -= to_add
-
-                else:
-                    donation.invested_amount += to_add
-                    donation.fully_invested = True
-                    donation.close_date = datetime.utcnow()
-                    db_obj.invested_amount += to_add
-                    right_amount -= to_add
-
-                session.add(donation)
+        db_obj = await project_donation(
+            session, db_obj)
 
         session.add(db_obj)
         await session.commit()

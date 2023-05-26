@@ -1,11 +1,9 @@
-from datetime import datetime  # type: ignore
-
 from sqlalchemy import select  # type: ignore
 from sqlalchemy.ext.asyncio import AsyncSession  # type: ignore
 
 from app.models import User, Donation
 from app.crud.base import CRUDBase
-from app.services.charity_project import get_project_fully_invested_false_objects
+from app.services.donation import donation_in_project
 
 
 class CRUDDonation(CRUDBase):
@@ -24,37 +22,7 @@ class CRUDDonation(CRUDBase):
         await session.commit()
         await session.refresh(db_obj)
 
-        projects = await get_project_fully_invested_false_objects(session)
-        projects = projects.scalars().all()
-
-        if projects:
-            total_amount = db_obj.full_amount
-            for project in projects:
-                if total_amount <= 0:
-                    break
-
-                to_add = min(total_amount, project.full_amount - project.invested_amount)
-
-                if to_add >= total_amount:
-                    to_add = total_amount
-
-                    project.invested_amount += to_add
-                    if project.invested_amount == project.full_amount:
-                        project.fully_invested = True
-
-                    db_obj.invested_amount += to_add
-                    db_obj.fully_invested = True
-                    db_obj.close_date = datetime.utcnow()
-                    total_amount -= to_add
-
-                else:
-                    project.invested_amount += to_add
-                    project.fully_invested = True
-                    project.close_date = datetime.utcnow()
-                    db_obj.invested_amount += to_add
-                    total_amount -= to_add
-
-                session.add(project)
+        db_obj = await donation_in_project(session, db_obj)
 
         session.add(db_obj)
         await session.commit()
